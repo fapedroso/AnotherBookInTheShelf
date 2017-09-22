@@ -1,4 +1,4 @@
-package br.ufsm.piveta.library;
+package br.ufsm.piveta.system;
 
 import java.sql.*;
 import java.lang.*;
@@ -7,11 +7,11 @@ import java.lang.*;
 public class Main {
     public static void main(String[] args) {
 
-        Library library;
+        System system;
 
         try {
-            library = new Library();
-            library.start();
+            system = new System(System.ENVIRONMENT_GUI);
+            system.start();
         } catch (SQLException e) {
             e.printStackTrace();
         }
