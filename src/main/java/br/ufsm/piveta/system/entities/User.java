@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class User {
 
@@ -90,6 +92,28 @@ public class User {
         preparedStatement.setInt(7,getId());
 
         return preparedStatement.executeUpdate() == 1;
+    }
+
+    public List<Fine> getFines(Connection connection) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT id, user_id, loan_id, value FROM fines WHERE user_id = ?");
+
+        preparedStatement.setInt(1,getId());
+
+        List<Fine> fines = new ArrayList<>();
+
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        while(resultSet.next()){
+            fines.add(new Fine(
+                    resultSet.getInt(1),
+                    resultSet.getInt(2),
+                    resultSet.getInt(3),
+                    resultSet.getInt(4)
+            ));
+        }
+
+        return fines;
     }
 
     public Integer getId() {
