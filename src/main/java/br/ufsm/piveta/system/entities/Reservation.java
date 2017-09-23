@@ -47,6 +47,7 @@ public class Reservation {
         Reservation reservation;
 
         while ((reservation = getFromResultSet(resultSet)) != null) {
+            reservation.setConnection(preparedStatement.getConnection());
             reservations.add(reservation);
         }
 
