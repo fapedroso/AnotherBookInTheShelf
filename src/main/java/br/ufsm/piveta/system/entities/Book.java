@@ -96,7 +96,7 @@ public class Book {
         preparedStatement.setString(2,code);
         preparedStatement.setString(3,condition);
 
-        preparedStatement.execute();
+        if (!preparedStatement.execute()) return null;
 
         ResultSet resultSet = preparedStatement.getGeneratedKeys();
         if (resultSet.next()){

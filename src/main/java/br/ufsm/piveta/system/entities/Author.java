@@ -92,7 +92,7 @@ public class Author {
 
         preparedStatement.setString(1,name);
 
-        preparedStatement.execute();
+        if (!preparedStatement.execute()) return null;
 
         ResultSet resultSet = preparedStatement.getGeneratedKeys();
         if (resultSet.next()){

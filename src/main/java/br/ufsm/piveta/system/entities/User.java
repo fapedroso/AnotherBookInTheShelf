@@ -124,7 +124,7 @@ public class User {
         preparedStatement.setString(7, postalCode);
         preparedStatement.setString(8, password);
 
-        preparedStatement.execute();
+        if (!preparedStatement.execute()) return null;
 
         ResultSet resultSet = preparedStatement.getGeneratedKeys();
         if (resultSet.next()){

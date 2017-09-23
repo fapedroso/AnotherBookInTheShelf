@@ -133,7 +133,7 @@ public class Reservation {
         preparedStatement.setInt(2,book_id);
         preparedStatement.setDate(3,java.sql.Date.valueOf(date));
 
-        preparedStatement.execute();
+        if (!preparedStatement.execute()) return null;
 
         ResultSet resultSet = preparedStatement.getGeneratedKeys();
         if (resultSet.next()) {

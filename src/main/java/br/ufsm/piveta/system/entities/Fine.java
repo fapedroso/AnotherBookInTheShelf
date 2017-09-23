@@ -108,7 +108,7 @@ public class Fine {
         preparedStatement.setInt(3,value);
         preparedStatement.setBoolean(4,paid);
 
-        preparedStatement.execute();
+        if (!preparedStatement.execute()) return null;
 
         ResultSet resultSet = preparedStatement.getGeneratedKeys();
         if (resultSet.next()) {
