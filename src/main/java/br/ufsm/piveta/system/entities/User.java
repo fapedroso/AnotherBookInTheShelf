@@ -1,9 +1,12 @@
 package br.ufsm.piveta.system.entities;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
@@ -34,6 +37,7 @@ public class User {
         this.postalCode = postalCode;
     }
 
+    @Nullable
     protected static User getFromResultSet(ResultSet resultSet) throws SQLException {
         if (resultSet.next()) {
             return new User(
@@ -49,6 +53,34 @@ public class User {
         } else return null;
     }
 
+    protected static List<User> getListFromPreparedStatement(PreparedStatement preparedStatement)
+            throws SQLException {
+        List<User> users = new ArrayList<>();
+
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        User user;
+
+        while ((user = getFromResultSet(resultSet)) != null) {
+            user.setConnection(preparedStatement.getConnection());
+            users.add(user);
+        }
+
+        return users;
+    }
+
+    protected static User getFromPreparedStatement(PreparedStatement preparedStatement) throws SQLException {
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        User user = getFromResultSet(resultSet);
+
+        if (user != null) {
+            user.setConnection(preparedStatement.getConnection());
+        }
+
+        return user;
+    }
+
     public static User get(Connection connection, int id) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, name, username, is_teacher, is_librarian, address, phone, postal_code " +
@@ -56,15 +88,7 @@ public class User {
 
         preparedStatement.setInt(1,id);
 
-        ResultSet resultSet = preparedStatement.executeQuery();
-
-        User user = getFromResultSet(resultSet);
-
-        if (user != null) {
-            user.setConnection(connection);
-        }
-
-        return user;
+        return getFromPreparedStatement(preparedStatement);
     }
 
     public static User get(Connection connection, String username) throws SQLException {
@@ -74,19 +98,19 @@ public class User {
 
         preparedStatement.setString(1,username);
 
-        ResultSet resultSet = preparedStatement.executeQuery();
-
-        User user = getFromResultSet(resultSet);
-
-        if (user != null) {
-            user.setConnection(connection);
-        }
-
-        return user;
+        return getFromPreparedStatement(preparedStatement);
     }
 
+    public static List<User> getAll(Connection connection) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT id, name, username, is_teacher, is_librarian, address, phone, postal_code FROM users");
+
+        return getListFromPreparedStatement(preparedStatement);
+    }
+
+    @Nullable
     public static User create(Connection connection, String name, String username, Boolean isTeacher, Boolean isLibrarian,
-    String address, String phone, String postalCode, String password) throws SQLException {
+                              String address, String phone, String postalCode, String password) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "INSERT INTO users (name,username,is_teacher,is_librarian,address,phone,postal_code,password) "+
                         "values (?,?,?,?,?,?,?,md5(?))");
@@ -111,6 +135,7 @@ public class User {
 
     public void setPassword(String password) {
         passwordHasChanged = true;
+        needUpdate = true;
         newPassword = password;
     }
 

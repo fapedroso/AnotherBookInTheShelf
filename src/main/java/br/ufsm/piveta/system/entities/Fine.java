@@ -1,12 +1,13 @@
 package br.ufsm.piveta.system.entities;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.locks.Condition;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class Fine {
@@ -28,6 +29,7 @@ public class Fine {
         this.paid = paid;
     }
 
+    @Nullable
     public static Fine getFromResultSet(ResultSet resultSet) throws SQLException {
         if (resultSet.next()) {
             return new Fine(
@@ -95,6 +97,7 @@ public class Fine {
         return fines;
     }
 
+    @Nullable
     public static Fine create(Connection connection, Integer user_id, Integer loan_id, Integer value, Boolean paid)
             throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
@@ -116,14 +119,12 @@ public class Fine {
 
     public boolean save() throws SQLException {
         PreparedStatement preparedStatement = getConnection().prepareStatement(
-                "UPDATE fines SET user_id = ?, loan_id = ?, value = ?, paid = ? WHERE id = ?");
+                "UPDATE fines SET value = ?, paid = ? WHERE id = ?");
 
-        preparedStatement.setInt(1,getUserId());
-        preparedStatement.setInt(2,getLoanId());
-        preparedStatement.setInt(3,getValue());
-        preparedStatement.setBoolean(4,getPaid());
+        preparedStatement.setInt(1,getValue());
+        preparedStatement.setBoolean(2,getPaid());
 
-        preparedStatement.setInt(5,getId());
+        preparedStatement.setInt(3,getId());
 
         return preparedStatement.executeUpdate() == 1;
     }
@@ -151,26 +152,15 @@ public class Fine {
         return user;
     }
 
-    public void setUser(User user) {
-        this.user = user;
-        this.user_id = user.getId();
-    }
-
     public Integer getLoanId() {
         return loan_id;
     }
 
     public Loan getLoan() throws SQLException {
-        return null;
-//        if (user == null){
+        if (loan == null){
 //            user = Loan.get(getConnection(),getLoanId());
-//        }
-//        return loan;
-    }
-
-    public void setLoan(Loan loan) {
-        this.loan = loan;
-//        this.loan_id = loan.getId;
+        }
+        return loan;
     }
 
     public Boolean getPaid() {

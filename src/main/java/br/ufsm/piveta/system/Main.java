@@ -10,7 +10,7 @@ public class Main {
         System system;
 
         try {
-            system = new System(System.ENVIRONMENT_GUI);
+            system = new System(System.ENVIRONMENT_CLI);
             system.start();
         } catch (SQLException e) {
             e.printStackTrace();

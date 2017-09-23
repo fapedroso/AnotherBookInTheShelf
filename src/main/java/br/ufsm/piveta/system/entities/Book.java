@@ -1,15 +1,20 @@
 package br.ufsm.piveta.system.entities;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class Book {
     private Connection connection;
     private Integer id;
     private Integer literary_work_id;
+    private LiteraryWork literary_work;
     private String code;
     private String condition;
 
@@ -21,6 +26,7 @@ public class Book {
 
     }
 
+    @Nullable
     protected static Book getFromResultSet(ResultSet resultSet) throws SQLException {
         if(resultSet.next()){
             return new Book(
@@ -32,24 +38,44 @@ public class Book {
         }else return null;
     }
 
+    protected static List<Book> getListFromPreparedStatement(PreparedStatement preparedStatement)
+            throws SQLException {
+        List<Book> books = new ArrayList<>();
+
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        Book book;
+
+        while ((book = getFromResultSet(resultSet)) != null) {
+            book.setConnection(preparedStatement.getConnection());
+            books.add(book);
+        }
+
+        return books;
+    }
+
+    protected static Book getFromPreparedStatement(PreparedStatement preparedStatement) throws SQLException {
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        Book book = getFromResultSet(resultSet);
+
+        if (book != null) {
+            book.setConnection(preparedStatement.getConnection());
+        }
+
+        return book;
+    }
+
     protected static Book get(Connection connection,int id) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, literary_work_id, cod, condition FROM books WHERE id = ?");
 
         preparedStatement.setInt(1, id);
 
-        ResultSet resultSet = preparedStatement.executeQuery();
-
-        Book book = getFromResultSet(resultSet);
-
-        if(book != null){
-            book.setConnection(connection);
-        }
-
-        return book;
+        return getFromPreparedStatement(preparedStatement);
     }
 
-    protected  static Book get(Connection connection,String title) throws SQLException {
+    protected static Book get(Connection connection,String title) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT books.id, books.literary_work_id, books.cod, books.condition FROM books "+
                         "JOIN literary_works ON books.literary_work_id = literary_works.id " +
@@ -57,17 +83,10 @@ public class Book {
 
         preparedStatement.setString(1, title);
 
-        ResultSet resultSet = preparedStatement.executeQuery();
-
-        Book book = getFromResultSet(resultSet);
-
-        if (book != null) {
-            book.setConnection(connection);
-        }
-
-        return book;
+        return getFromPreparedStatement(preparedStatement);
     }
 
+    @Nullable
     public static Book create(Connection connection, Integer literaryWorkId, String code, String condition)
             throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
@@ -113,6 +132,13 @@ public class Book {
 
     public Integer getLiteraryWorkId() {
         return literary_work_id;
+    }
+
+    public LiteraryWork getLiteraryWork(){
+        if (this.literary_work == null){
+//            literary_work = LiteraryWork.get(getConnection(),getLiteraryWorkId());
+        }
+        return literary_work;
     }
 
     public String getCode() {

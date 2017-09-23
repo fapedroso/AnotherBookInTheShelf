@@ -1,5 +1,7 @@
 package br.ufsm.piveta.system.entities;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -27,6 +29,7 @@ public class Reservation {
         this.reservedFor = reservedFor;
     }
 
+    @Nullable
     public static Reservation getFromResultSet(ResultSet resultSet) throws SQLException {
         if (resultSet.next()) {
             return new Reservation(
@@ -120,6 +123,7 @@ public class Reservation {
         return getListFromPreparedStatement(preparedStatement);
     }
 
+    @Nullable
     public static Reservation create(Connection connection, Integer user_id, Integer book_id, LocalDate date)
         throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
@@ -136,19 +140,6 @@ public class Reservation {
             int id = resultSet.getInt(1);
             return new Reservation(id, user_id, book_id, date);
         } else return null;
-    }
-
-    public boolean save() throws SQLException {
-        PreparedStatement preparedStatement = getConnection().prepareStatement(
-                "UPDATE reservations SET user_id = ?, book_id = ?, reserved_for = ? WHERE id = ?");
-
-        preparedStatement.setInt(1,getUserId());
-        preparedStatement.setInt(2,getBookId());
-        preparedStatement.setDate(3,java.sql.Date.valueOf(getReservedFor()));
-
-        preparedStatement.setInt(4,getId());
-
-        return preparedStatement.executeUpdate() == 1;
     }
 
     public boolean remove() throws SQLException {
@@ -175,11 +166,6 @@ public class Reservation {
         return user;
     }
 
-    public void setUser(User user){
-        this.user = user;
-        this.user_id = user.getId();
-    }
-
     public Integer getBookId() {
         return book_id;
     }
@@ -191,17 +177,8 @@ public class Reservation {
         return book;
     }
 
-    public void setBook(Book book) {
-        this.book = book;
-        this.book_id = book.getId();
-    }
-
     public LocalDate getReservedFor() {
         return reservedFor;
-    }
-
-    public void setReservedFor(LocalDate reservedFor) {
-        this.reservedFor = reservedFor;
     }
 
     public Connection getConnection() {
