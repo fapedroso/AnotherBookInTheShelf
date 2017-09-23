@@ -9,6 +9,7 @@ import java.util.List;
 
 public class User {
 
+    private Connection connection;
     private Integer id;
     private String name;
     private String username;
@@ -18,7 +19,7 @@ public class User {
     private String phone;
     private String postalCode;
 
-    User(Integer id, String name, String username, Boolean isTeacher, Boolean isLibrarian,
+    protected User(Integer id, String name, String username, Boolean isTeacher, Boolean isLibrarian,
          String address, String phone, String postalCode) {
         this.id = id;
         this.name = name;
@@ -54,7 +55,13 @@ public class User {
 
         ResultSet resultSet = preparedStatement.executeQuery();
 
-        return getFromResultSet(resultSet);
+        User user = getFromResultSet(resultSet);
+
+        if (user != null) {
+            user.setConnection(connection);
+        }
+
+        return user;
     }
 
     public static User get(Connection connection, String username) throws SQLException {
@@ -66,7 +73,13 @@ public class User {
 
         ResultSet resultSet = preparedStatement.executeQuery();
 
-        return getFromResultSet(resultSet);
+        User user = getFromResultSet(resultSet);
+
+        if (user != null) {
+            user.setConnection(connection);
+        }
+
+        return user;
     }
 
     public boolean setPasswordAndSave(Connection connection, String password) throws SQLException {
@@ -92,6 +105,10 @@ public class User {
         preparedStatement.setInt(7,getId());
 
         return preparedStatement.executeUpdate() == 1;
+    }
+
+    public List<Fine> getFines() throws SQLException {
+        return getFines(connection);
     }
 
     public List<Fine> getFines(Connection connection) throws SQLException {
@@ -170,5 +187,13 @@ public class User {
 
     public void setPostalCode(String postalCode) {
         this.postalCode = postalCode;
+    }
+
+    public Connection getConnection() {
+        return connection;
+    }
+
+    public void setConnection(Connection connection) {
+        this.connection = connection;
     }
 }
