@@ -4,9 +4,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class User {
 
     private Connection connection;
@@ -34,14 +34,14 @@ public class User {
     protected static User getFromResultSet(ResultSet resultSet) throws SQLException {
         if (resultSet.next()) {
             return new User(
-                    resultSet.getInt(1), // id
-                    resultSet.getString(2), // name
-                    resultSet.getString(3), // username
+                    resultSet.getInt(1),     // id
+                    resultSet.getString(2),  // name
+                    resultSet.getString(3),  // username
                     resultSet.getBoolean(4), // is_teacher
                     resultSet.getBoolean(5), // is_librarian
-                    resultSet.getString(6), // address
-                    resultSet.getString(7), // phone
-                    resultSet.getString(8) // postal_code
+                    resultSet.getString(6),  // address
+                    resultSet.getString(7),  // phone
+                    resultSet.getString(8)   // postal_code
             );
         } else return null;
     }
@@ -92,12 +92,16 @@ public class User {
         return preparedStatement.executeUpdate() == 1;
     }
 
+    public boolean save() throws SQLException {
+        return save(connection);
+    }
+
     public boolean save(Connection connection) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement("UPDATE users SET name = ?, " +
                 "is_teacher = ?, is_librarian = ?, address = ?, phone = ?, postal_code = ? WHERE id = ?");
 
         preparedStatement.setString(1,getName());
-        preparedStatement.setBoolean(2,getIsTeatcher());
+        preparedStatement.setBoolean(2, getIsTeacher());
         preparedStatement.setBoolean(3,getIsLibrarian());
         preparedStatement.setString(4,getAddress());
         preparedStatement.setString(5,getPhone());
@@ -112,25 +116,7 @@ public class User {
     }
 
     public List<Fine> getFines(Connection connection) throws SQLException {
-        PreparedStatement preparedStatement = connection.prepareStatement(
-                "SELECT id, user_id, loan_id, value FROM fines WHERE user_id = ?");
-
-        preparedStatement.setInt(1,getId());
-
-        List<Fine> fines = new ArrayList<>();
-
-        ResultSet resultSet = preparedStatement.executeQuery();
-
-        while(resultSet.next()){
-            fines.add(new Fine(
-                    resultSet.getInt(1),
-                    resultSet.getInt(2),
-                    resultSet.getInt(3),
-                    resultSet.getInt(4)
-            ));
-        }
-
-        return fines;
+        return Fine.getByUser(connection,getId());
     }
 
     public Integer getId() {
@@ -149,12 +135,12 @@ public class User {
         return username;
     }
 
-    public Boolean getIsTeatcher() {
+    public Boolean getIsTeacher() {
         return isTeacher;
     }
 
-    public void setIsTeatcher(Boolean teatcher) {
-        isTeacher = teatcher;
+    public void setIsTeacher(Boolean teacher) {
+        isTeacher = teacher;
     }
 
     public Boolean getIsLibrarian() {

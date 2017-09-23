@@ -158,7 +158,7 @@ public class System {
                 if (loggedUser.getIsLibrarian()){
                     showMessage("You are a Librarian");
                 }
-                if (loggedUser.getIsTeatcher()){
+                if (loggedUser.getIsTeacher()){
                     showMessage("You are a Teacher");
                 }
             }
