@@ -119,6 +119,25 @@ public class Reservation {
 
         return getListFromPreparedStatement(preparedStatement);
     }
+
+    public static Reservation create(Connection connection, Integer user_id, Integer book_id, LocalDate date)
+        throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "INSERT INTO reservations (user_id, book_id, reserved_for) values (?,?,?)");
+
+        preparedStatement.setInt(1,user_id);
+        preparedStatement.setInt(2,book_id);
+        preparedStatement.setDate(3,java.sql.Date.valueOf(date));
+
+        preparedStatement.execute();
+
+        ResultSet resultSet = preparedStatement.getGeneratedKeys();
+        if (resultSet.next()) {
+            int id = resultSet.getInt(1);
+            return new Reservation(id, user_id, book_id, date);
+        } else return null;
+    }
+
     public boolean save() throws SQLException {
         PreparedStatement preparedStatement = getConnection().prepareStatement(
                 "UPDATE reservations SET user_id = ?, book_id = ?, reserved_for = ? WHERE id = ?");
@@ -130,6 +149,15 @@ public class Reservation {
         preparedStatement.setInt(4,getId());
 
         return preparedStatement.executeUpdate() == 1;
+    }
+
+    public boolean remove() throws SQLException {
+        PreparedStatement preparedStatement = getConnection().prepareStatement(
+                "DELETE FROM reservations WHERE id = ?");
+
+        preparedStatement.setInt(1, getId());
+
+        return preparedStatement.execute();
     }
 
     public Integer getId() {

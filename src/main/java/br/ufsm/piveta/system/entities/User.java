@@ -18,6 +18,9 @@ public class User {
     private String address;
     private String phone;
     private String postalCode;
+    private String newPassword;
+    private boolean passwordHasChanged = false;
+    private boolean needUpdate = false;
 
     protected User(Integer id, String name, String username, Boolean isTeacher, Boolean isLibrarian,
          String address, String phone, String postalCode) {
@@ -82,41 +85,91 @@ public class User {
         return user;
     }
 
-    public boolean setPasswordAndSave(Connection connection, String password) throws SQLException {
+    public static User create(Connection connection, String name, String username, Boolean isTeacher, Boolean isLibrarian,
+    String address, String phone, String postalCode, String password) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
-                "UPDATE users SET password = md5(?) WHERE id = ?"
-        );
+                "INSERT INTO users (name,username,is_teacher,is_librarian,address,phone,postal_code,password) "+
+                        "values (?,?,?,?,?,?,?,md5(?))");
 
-        preparedStatement.setInt(1,getId());
+        preparedStatement.setString(1,name);
+        preparedStatement.setString(2,username);
+        preparedStatement.setBoolean(3, isTeacher);
+        preparedStatement.setBoolean(4, isLibrarian);
+        preparedStatement.setString(5, address);
+        preparedStatement.setString(6, phone);
+        preparedStatement.setString(7, postalCode);
+        preparedStatement.setString(8, password);
 
-        return preparedStatement.executeUpdate() == 1;
+        preparedStatement.execute();
+
+        ResultSet resultSet = preparedStatement.getGeneratedKeys();
+        if (resultSet.next()){
+            int id = resultSet.getInt(1);
+            return new User(id,name,username,isTeacher,isLibrarian,address,phone,postalCode);
+        } else return null;
+    }
+
+    public void setPassword(String password) {
+        passwordHasChanged = true;
+        newPassword = password;
     }
 
     public boolean save() throws SQLException {
-        return save(connection);
+
+        boolean success;
+
+        if (passwordHasChanged){
+            PreparedStatement preparedStatement = getConnection().prepareStatement("UPDATE users SET name = ?, " +
+                    "is_teacher = ?, is_librarian = ?, address = ?, phone = ?, postal_code = ?, password = md5(?) "+
+                    "WHERE id = ?");
+
+            preparedStatement.setString(1,getName());
+            preparedStatement.setBoolean(2, getIsTeacher());
+            preparedStatement.setBoolean(3,getIsLibrarian());
+            preparedStatement.setString(4,getAddress());
+            preparedStatement.setString(5,getPhone());
+            preparedStatement.setString(6,getPostalCode());
+            preparedStatement.setString(7,newPassword);
+
+            preparedStatement.setInt(8,getId());
+
+            success = (preparedStatement.executeUpdate() == 1);
+
+        } else if (needUpdate) {
+            PreparedStatement preparedStatement = getConnection().prepareStatement("UPDATE users SET name = ?, " +
+                    "is_teacher = ?, is_librarian = ?, address = ?, phone = ?, postal_code = ? WHERE id = ?");
+
+            preparedStatement.setString(1,getName());
+            preparedStatement.setBoolean(2, getIsTeacher());
+            preparedStatement.setBoolean(3,getIsLibrarian());
+            preparedStatement.setString(4,getAddress());
+            preparedStatement.setString(5,getPhone());
+            preparedStatement.setString(6,getPostalCode());
+
+            preparedStatement.setInt(7,getId());
+
+            success = (preparedStatement.executeUpdate() == 1);
+        } else success = true;
+
+        if (success) {
+            needUpdate = false;
+            passwordHasChanged = false;
+        }
+
+        return success;
     }
 
-    public boolean save(Connection connection) throws SQLException {
-        PreparedStatement preparedStatement = connection.prepareStatement("UPDATE users SET name = ?, " +
-                "is_teacher = ?, is_librarian = ?, address = ?, phone = ?, postal_code = ? WHERE id = ?");
+    public boolean remove() throws SQLException {
+        PreparedStatement preparedStatement = getConnection().prepareStatement(
+                "DELETE FROM users WHERE id = ?");
 
-        preparedStatement.setString(1,getName());
-        preparedStatement.setBoolean(2, getIsTeacher());
-        preparedStatement.setBoolean(3,getIsLibrarian());
-        preparedStatement.setString(4,getAddress());
-        preparedStatement.setString(5,getPhone());
-        preparedStatement.setString(6,getPostalCode());
-        preparedStatement.setInt(7,getId());
+        preparedStatement.setInt(1, getId());
 
-        return preparedStatement.executeUpdate() == 1;
+        return preparedStatement.execute();
     }
 
     public List<Fine> getFines() throws SQLException {
-        return getFines(connection);
-    }
-
-    public List<Fine> getFines(Connection connection) throws SQLException {
-        return Fine.getByUser(connection,getId());
+        return Fine.getByUser(getConnection(),getId());
     }
 
     public Integer getId() {
@@ -128,6 +181,7 @@ public class User {
     }
 
     public void setName(String name) {
+        if (!this.name.equals(name)) needUpdate = true;
         this.name = name;
     }
 
@@ -140,6 +194,7 @@ public class User {
     }
 
     public void setIsTeacher(Boolean teacher) {
+        if (!this.isTeacher.equals(teacher)) needUpdate = true;
         isTeacher = teacher;
     }
 
@@ -148,6 +203,7 @@ public class User {
     }
 
     public void setIsLibrarian(Boolean librarian) {
+        if (!this.isLibrarian.equals(librarian)) needUpdate = true;
         isLibrarian = librarian;
     }
 
@@ -156,6 +212,7 @@ public class User {
     }
 
     public void setAddress(String address) {
+        if (!this.address.equals(address)) needUpdate = true;
         this.address = address;
     }
 
@@ -164,6 +221,7 @@ public class User {
     }
 
     public void setPhone(String phone) {
+        if (!this.phone.equals(phone)) needUpdate = true;
         this.phone = phone;
     }
 
@@ -172,6 +230,7 @@ public class User {
     }
 
     public void setPostalCode(String postalCode) {
+        if (!this.postalCode.equals(postalCode)) needUpdate = true;
         this.postalCode = postalCode;
     }
 

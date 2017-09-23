@@ -5,17 +5,18 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class Book {
     private Connection connection;
     private Integer id;
     private Integer literary_work_id;
-    private String codigo;
+    private String code;
     private String condition;
 
-    protected Book(Integer id,Integer literary_work_id,String codigo,String condition){
+    protected Book(Integer id, Integer literary_work_id, String code, String condition){
         this.id = id;
         this.literary_work_id = literary_work_id;
-        this.codigo = codigo;
+        this.code = code;
         this.condition = condition;
 
     }
@@ -23,10 +24,10 @@ public class Book {
     protected static Book getFromResultSet(ResultSet resultSet) throws SQLException {
         if(resultSet.next()){
             return new Book(
-                    resultSet.getInt(1), // id
-                    resultSet.getInt(2), // literary_work_id
-                    resultSet.getString(3), // codigo
-                    resultSet.getString(4) // condition
+                    resultSet.getInt(1),    // id
+                    resultSet.getInt(2),    // literary_work_id
+                    resultSet.getString(3), // code
+                    resultSet.getString(4)  // condition
             );
         }else return null;
     }
@@ -67,30 +68,59 @@ public class Book {
         return book;
     }
 
-    public boolean save(Connection connection) throws SQLException {
+    public static Book create(Connection connection, Integer literaryWorkId, String code, String condition)
+            throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
+                "INSERT INTO books (literary_work_id, cod, condition) values (?,?,?)");
+
+        preparedStatement.setInt(1,literaryWorkId);
+        preparedStatement.setString(2,code);
+        preparedStatement.setString(3,condition);
+
+        preparedStatement.execute();
+
+        ResultSet resultSet = preparedStatement.getGeneratedKeys();
+        if (resultSet.next()){
+            int id = resultSet.getInt(1);
+            return new Book(id, literaryWorkId, code, condition);
+        } else return null;
+    }
+
+    public boolean save() throws SQLException {
+        PreparedStatement preparedStatement = getConnection().prepareStatement(
                 "UPDATE books SET cod = ?, condition = ? WHERE id = ?");
 
-        preparedStatement.setString(1,getCodigo());
-        preparedStatement.setString(2,getCondition());
+        preparedStatement.setString(1, getCode());
+        preparedStatement.setString(2, getCondition());
+
+        preparedStatement.setInt(3, getId());
 
         return preparedStatement.executeUpdate() == 1;
+    }
+
+    public boolean remove() throws SQLException {
+        PreparedStatement preparedStatement = getConnection().prepareStatement(
+                "DELETE FROM books WHERE id = ?");
+
+        preparedStatement.setInt(1, getId());
+
+        return preparedStatement.execute();
     }
 
     public Integer getId() {
         return id;
     }
 
-    public Integer getLiterary_work_id() {
+    public Integer getLiteraryWorkId() {
         return literary_work_id;
     }
 
-    public String getCodigo() {
-        return codigo;
+    public String getCode() {
+        return code;
     }
 
-    public void setCodigo(String codigo) {
-        this.codigo = codigo;
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getCondition() {
