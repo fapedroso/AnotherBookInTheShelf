@@ -77,7 +77,7 @@ public class LiteraryWork {
         return literaryWork;
     }
 
-    protected static LiteraryWork get(Connection connection,int id) throws SQLException {
+    public static LiteraryWork get(Connection connection,int id) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, author_id, publisher_id, title, isbn, edition, year FROM literary_works "+
                         "WHERE id = ?");
@@ -87,17 +87,35 @@ public class LiteraryWork {
         return getFromPreparedStatement(preparedStatement);
     }
 
-    protected static LiteraryWork get(Connection connection,String title) throws SQLException {
+    public static List<LiteraryWork> getByTitle(Connection connection,String title) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, author_id, publisher_id, title, isbn, edition, year FROM literary_works "+
-                        "WHERE title like concat('%',?,'%')");
+                        "WHERE title ILIKE concat('%',?,'%')");
 
         preparedStatement.setString(1, title);
+
+        return getListFromPreparedStatement(preparedStatement);
+    }
+    public static List<LiteraryWork> getByPublisher(Connection connection,Integer publisher_id) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT id, author_id, publisher_id, title, isbn, edition, year FROM literary_works "+
+                        "WHERE publisher_id = ?");
+
+        preparedStatement.setInt(1, publisher_id);
+
+        return getListFromPreparedStatement(preparedStatement);
+    }
+    public static LiteraryWork getByISBN(Connection connection,String isbn) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT id, author_id, publisher_id, title, isbn, edition, year FROM literary_works "+
+                        "WHERE isbn = ?");
+
+        preparedStatement.setString(1, isbn);
 
         return getFromPreparedStatement(preparedStatement);
     }
 
-    protected static List<LiteraryWork> getAll(Connection connection,String name) throws SQLException {
+    public static List<LiteraryWork> getAll(Connection connection,String name) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, author_id, publisher_id, title, isbn, edition, year FROM literary_works");
 

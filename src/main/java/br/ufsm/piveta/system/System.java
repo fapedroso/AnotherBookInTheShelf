@@ -1,12 +1,17 @@
 package br.ufsm.piveta.system;
 
+import br.ufsm.piveta.system.entities.Book;
+import br.ufsm.piveta.system.entities.LiteraryWork;
 import br.ufsm.piveta.system.entities.User;
 import br.ufsm.piveta.system.forms.Login;
+import org.omg.CORBA.TIMEOUT;
 
 import javax.swing.*;
 import java.io.Console;
+import java.io.IOException;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("WeakerAccess")
 public class System {
@@ -15,15 +20,16 @@ public class System {
     @SuppressWarnings("unused")
     public final static int ENVIRONMENT_GUI = 1;
 
-    protected final int PREPARED_STATEMENT_LOGIN = 0;
+    private final int PREPARED_STATEMENT_LOGIN = 0;
 
-    protected final Map<Integer,PreparedStatement> preparedStatements = new HashMap<>();
+    private final Map<Integer,PreparedStatement> preparedStatements = new HashMap<>();
 
-    protected final Scanner scanner;
-    protected final Console console;
-    protected Connection connection = null;
-    protected int environment = ENVIRONMENT_CLI;
-    protected User loggedUser = null;
+    private final Scanner scanner;
+    private final Console console;
+    private Connection connection = null;
+    private int environment = ENVIRONMENT_CLI;
+    private User loggedUser = null;
+    private boolean exiting;
 
     System(int environment) throws SQLException {
         this.environment = environment;
@@ -155,12 +161,8 @@ public class System {
             @Override
             public void success() {
                 showMessage("Welcome " + loggedUser.getName());
-
-                if (loggedUser.getIsLibrarian()){
-                    showMessage("You are a Librarian");
-                }
-                if (loggedUser.getIsTeacher()){
-                    showMessage("You are a Teacher");
+                if (environment == ENVIRONMENT_CLI) {
+                    showOptions();
                 }
             }
 
@@ -178,5 +180,104 @@ public class System {
             }
         });
 
+    }
+
+    protected int getValidOption(int maxValid) {
+        java.lang.System.out.printf("\nSelect [0-%d]: ",maxValid);
+
+        int choice;
+
+        while ((choice = scanner.nextInt()) > maxValid || choice < 0){
+            java.lang.System.out.printf("Invalid choice, please enter a number between 0 and %d",maxValid);
+        }
+
+        return choice;
+    }
+
+    protected void clearConsole(){
+        java.lang.System.out.print("\033[H\033[2J");
+        java.lang.System.out.flush();
+    }
+
+    protected void showOptions(){
+
+        try {
+            TimeUnit.SECONDS.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        while (!exiting) {
+            clearConsole();
+            if (loggedUser.getIsLibrarian()){
+                showLibrarianMainOptions();
+            } else {
+                showNonLibrarianMainOptions();
+            }
+        }
+    }
+
+    protected void showLibrarianMainOptions(){
+        java.lang.System.out.println("Choose an action:\n");
+        java.lang.System.out.println("[1] Manage Books");
+        java.lang.System.out.println("[0] Exit");
+
+        switch (getValidOption(1)){
+            case 0:
+                exiting = true;
+                return;
+            case 1:
+                break;
+        }
+    }
+
+    protected void showNonLibrarianMainOptions(){
+        java.lang.System.out.println("Choose an action:\n");
+        java.lang.System.out.println("[1] New Reservations");
+        java.lang.System.out.println("[2] List Reservations");
+        java.lang.System.out.println("[0] Exit");
+
+        switch (getValidOption(2)){
+            case 0:
+                exiting = true;
+                return;
+            case 1:
+                newRegistration();
+                break;
+            case 2:
+                break;
+        }
+    }
+
+    protected void newRegistration(){
+
+        clearConsole();
+        java.lang.System.out.print("Enter a book title: ");
+
+        String bookTitle;
+
+        do {
+            bookTitle = scanner.nextLine();
+        } while (bookTitle.isEmpty());
+
+        try {
+            List<LiteraryWork> literaryWorks = LiteraryWork.getByTitle(connection,bookTitle);
+
+            if (literaryWorks.isEmpty()) {
+                java.lang.System.out.println("Could not find any book. Please try again or leave blank to return.");
+            } else {
+                java.lang.System.out.println("Those are the books I've found:\n");
+            }
+
+            for (int i = 1; i <= literaryWorks.size(); i++) {
+                java.lang.System.out.printf("[%d] %s\n", i, literaryWorks.get(i-1).getTitle());
+            }
+            java.lang.System.out.println("[0] Cancel\n");
+
+            java.lang.System.out.printf("Choose a book to reserve [0-%d]: ",literaryWorks.size());
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

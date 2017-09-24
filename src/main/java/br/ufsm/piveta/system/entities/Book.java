@@ -66,7 +66,7 @@ public class Book {
         return book;
     }
 
-    protected static Book get(Connection connection,int id) throws SQLException {
+    public static Book get(Connection connection, int id) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, literary_work_id, cod, condition FROM books WHERE id = ?");
 
@@ -75,7 +75,7 @@ public class Book {
         return getFromPreparedStatement(preparedStatement);
     }
 
-    protected static Book get(Connection connection,String title) throws SQLException {
+    public static List<Book> getByTitle(Connection connection, String title) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT books.id, books.literary_work_id, books.cod, books.condition FROM books "+
                         "JOIN literary_works ON books.literary_work_id = literary_works.id " +
@@ -83,7 +83,7 @@ public class Book {
 
         preparedStatement.setString(1, title);
 
-        return getFromPreparedStatement(preparedStatement);
+        return getListFromPreparedStatement(preparedStatement);
     }
 
     @Nullable
