@@ -134,9 +134,9 @@ public class Book {
         return literary_work_id;
     }
 
-    public LiteraryWork getLiteraryWork(){
+    public LiteraryWork getLiteraryWork() throws SQLException {
         if (this.literary_work == null){
-//            literary_work = LiteraryWork.get(getConnection(),getLiteraryWorkId());
+            literary_work = LiteraryWork.get(getConnection(),getLiteraryWorkId());
         }
         return literary_work;
     }

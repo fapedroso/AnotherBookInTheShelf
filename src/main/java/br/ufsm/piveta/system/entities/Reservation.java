@@ -19,14 +19,14 @@ public class Reservation {
     private User user = null;
     private Integer book_id;
     private Book book = null;
-    private LocalDate reservedFor;
+    private LocalDate reserved_for;
 
 
-    protected Reservation(Integer id, Integer user_id, Integer book_id, LocalDate reservedFor){
+    protected Reservation(Integer id, Integer user_id, Integer book_id, LocalDate reserved_for){
         this.id = id;
         this.user_id = user_id;
         this.book_id = book_id;
-        this.reservedFor = reservedFor;
+        this.reserved_for = reserved_for;
     }
 
     @Nullable
@@ -178,7 +178,7 @@ public class Reservation {
     }
 
     public LocalDate getReservedFor() {
-        return reservedFor;
+        return reserved_for;
     }
 
     public Connection getConnection() {

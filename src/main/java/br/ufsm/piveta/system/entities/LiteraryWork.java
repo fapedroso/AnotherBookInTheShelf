@@ -34,8 +34,6 @@ public class LiteraryWork {
         this.year = year;
     }
 
-
-
     @Nullable
     protected static LiteraryWork getFromResultSet(ResultSet resultSet) throws SQLException {
         if(resultSet.next()){
@@ -79,6 +77,33 @@ public class LiteraryWork {
         return literaryWork;
     }
 
+    protected static LiteraryWork get(Connection connection,int id) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT id, author_id, publisher_id, title, isbn, edition, year FROM literary_works "+
+                        "WHERE id = ?");
+
+        preparedStatement.setInt(1, id);
+
+        return getFromPreparedStatement(preparedStatement);
+    }
+
+    protected static LiteraryWork get(Connection connection,String title) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT id, author_id, publisher_id, title, isbn, edition, year FROM literary_works "+
+                        "WHERE name like concat('%',?,'%')");
+
+        preparedStatement.setString(1, title);
+
+        return getFromPreparedStatement(preparedStatement);
+    }
+
+    protected static List<LiteraryWork> getAll(Connection connection,String name) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT id, author_id, publisher_id, title, isbn, edition, year FROM literary_works");
+
+        return getListFromPreparedStatement(preparedStatement);
+    }
+
     @Nullable
     public static LiteraryWork create(Connection connection, Integer author_id, Integer publisher_id, String title,
                                       String isbn, Integer edition, Integer year)
@@ -116,7 +141,7 @@ public class LiteraryWork {
         return id;
     }
 
-    public Integer getAuthor_id() {
+    public Integer getAuthorId() {
         return author_id;
     }
 
@@ -124,7 +149,7 @@ public class LiteraryWork {
         return author;
     }
 
-    public Integer getPublisher_id() {
+    public Integer getPublisherId() {
         return publisher_id;
     }
 
