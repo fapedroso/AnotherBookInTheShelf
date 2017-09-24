@@ -14,8 +14,8 @@ public class Login extends JFrame {
 
     @SuppressWarnings("WeakerAccess")
     public static class Credentials {
-        protected String username;
-        protected String password;
+        protected final String username;
+        protected final String password;
 
         public Credentials(String username, String password){
             this.username = username;

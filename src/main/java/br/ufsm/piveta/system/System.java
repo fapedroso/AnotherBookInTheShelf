@@ -12,14 +12,15 @@ import java.util.*;
 public class System {
 
     public final static int ENVIRONMENT_CLI = 0;
+    @SuppressWarnings("unused")
     public final static int ENVIRONMENT_GUI = 1;
 
     protected final int PREPARED_STATEMENT_LOGIN = 0;
 
-    protected Map<Integer,PreparedStatement> preparedStatements = new HashMap<>();
+    protected final Map<Integer,PreparedStatement> preparedStatements = new HashMap<>();
 
-    protected Scanner scanner;
-    protected Console console;
+    protected final Scanner scanner;
+    protected final Console console;
     protected Connection connection = null;
     protected int environment = ENVIRONMENT_CLI;
     protected User loggedUser = null;
@@ -148,7 +149,7 @@ public class System {
     }
 
 
-    public void start() throws SQLException {
+    public void start() {
 
         tryToLogin(new onLogin() {
             @Override

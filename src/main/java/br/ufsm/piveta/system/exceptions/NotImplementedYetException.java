@@ -1,4 +1,4 @@
 package br.ufsm.piveta.system.exceptions;
 
-public class NotImplementedYetException extends Exception {
+class NotImplementedYetException extends Exception {
 }

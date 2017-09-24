@@ -90,7 +90,7 @@ public class LiteraryWork {
     protected static LiteraryWork get(Connection connection,String title) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, author_id, publisher_id, title, isbn, edition, year FROM literary_works "+
-                        "WHERE name like concat('%',?,'%')");
+                        "WHERE title like concat('%',?,'%')");
 
         preparedStatement.setString(1, title);
 

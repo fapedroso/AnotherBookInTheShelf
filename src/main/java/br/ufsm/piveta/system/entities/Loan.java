@@ -54,7 +54,7 @@ public class Loan {
         return loan;
     }
 
-    protected static List<Loan> getListFromPrepareStatement(PreparedStatement preparedStatement) throws SQLException {
+    protected static List<Loan> getListFromPreparedStatement(PreparedStatement preparedStatement) throws SQLException {
         ResultSet resultSet = preparedStatement.executeQuery();
 
         List<Loan> loans = new ArrayList<>();
@@ -69,11 +69,20 @@ public class Loan {
         return loans;
     }
 
+    protected static Loan get(Connection connection, Integer id) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT id, book_id, user_id, withdrawn_in, returned_at, due_to FROM loans WHERE id = ?");
+
+        preparedStatement.setInt(1,id);
+
+        return getFromPreparedStatement(preparedStatement);
+    }
+
     protected static List<Loan> getAll(Connection connection) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, book_id, user_id, withdrawn_in, returned_at, due_to FROM loans");
 
-        return getListFromPrepareStatement(preparedStatement);
+        return getListFromPreparedStatement(preparedStatement);
     }
 
     protected static List<Loan> getByBook(Connection connection, int book_id) throws SQLException {
@@ -82,7 +91,7 @@ public class Loan {
 
         preparedStatement.setInt(1, book_id);
 
-        return getListFromPrepareStatement(preparedStatement);
+        return getListFromPreparedStatement(preparedStatement);
     }
 
     protected static List<Loan> getByUser(Connection connection, int user_id) throws SQLException {
@@ -91,7 +100,7 @@ public class Loan {
 
         preparedStatement.setInt(1, user_id);
 
-        return getListFromPrepareStatement(preparedStatement);
+        return getListFromPreparedStatement(preparedStatement);
     }
 
     protected static List<Loan> getLate(Connection connection, LocalDate returned_at, LocalDate due_to) throws SQLException {
@@ -99,7 +108,7 @@ public class Loan {
                 "SELECT id, book_id, user_id, withdrawn_in, returned_at, due_to FROM loans " +
                         "WHERE returned_at ISNULL AND due_to < current_date");
 
-        return getListFromPrepareStatement(preparedStatement);
+        return getListFromPreparedStatement(preparedStatement);
     }
 
     public boolean save(Connection connection) throws SQLException {

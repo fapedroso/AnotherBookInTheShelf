@@ -158,7 +158,7 @@ public class Fine {
 
     public Loan getLoan() throws SQLException {
         if (loan == null){
-//            user = Loan.get(getConnection(),getLoanId());
+            loan = Loan.get(getConnection(),getLoanId());
         }
         return loan;
     }
