@@ -21,6 +21,11 @@ public class Publisher {
         this.name = name;
     }
 
+    @Override
+    public String toString() {
+        return getName();
+    }
+
     @Nullable
     protected static Publisher getFromResultSet(ResultSet resultSet) throws SQLException {
         if(resultSet.next()){
@@ -59,7 +64,7 @@ public class Publisher {
         return publisher;
     }
 
-    protected static Publisher get(Connection connection,int id) throws SQLException {
+    public static Publisher get(Connection connection,int id) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, name FROM publishers WHERE id = ?");
 
@@ -68,16 +73,16 @@ public class Publisher {
         return getFromPreparedStatement(preparedStatement);
     }
 
-    protected static Publisher get(Connection connection,String name) throws SQLException {
+    public static List<Publisher> getByName(Connection connection, String name) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
-                "SELECT id, name FROM publishers WHERE name = ?");
+                "SELECT id, name FROM publishers WHERE name ILIKE concat('%',?,'%')");
 
         preparedStatement.setString(1, name);
 
-        return getFromPreparedStatement(preparedStatement);
+        return getListFromPreparedStatement(preparedStatement);
     }
 
-    protected static List<Publisher> getAll(Connection connection,String name) throws SQLException {
+    public static List<Publisher> getAll(Connection connection,String name) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, name FROM publishers");
 

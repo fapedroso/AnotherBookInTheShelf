@@ -29,6 +29,20 @@ public class Fine {
         this.paid = paid;
     }
 
+    @Override
+    public String toString() {
+        String status = (getPaid())?"Paid":"Unpaid";
+        String user;
+        String value = getValue().toString();
+        try {
+            user = getUser().toString();
+        } catch (SQLException e) {
+            user = "some user";
+            e.printStackTrace();
+        }
+        return status+" fine to "+user+" with value of $ "+value+",00";
+    }
+
     @Nullable
     public static Fine getFromResultSet(ResultSet resultSet) throws SQLException {
         if (resultSet.next()) {
@@ -42,21 +56,43 @@ public class Fine {
         } else return null;
     }
 
+    protected static List<Fine> getListFromPreparedStatement(PreparedStatement preparedStatement)
+            throws SQLException {
+        List<Fine> fines = new ArrayList<>();
+
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        Fine fine;
+
+        while ((fine = getFromResultSet(resultSet)) != null) {
+            fine.setConnection(preparedStatement.getConnection());
+            fines.add(fine);
+        }
+
+        return fines;
+    }
+
+    protected static Fine getFromPreparedStatement(PreparedStatement preparedStatement) throws SQLException {
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        Fine fine = getFromResultSet(resultSet);
+
+        if (fine != null) {
+            fine.setConnection(preparedStatement.getConnection());
+        }
+
+        return fine;
+    }
+
+
+
     public static Fine get(Connection connection, int id) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, user_id, loan_id, value, paid FROM fines WHERE id = ?");
 
         preparedStatement.setInt(1,id);
 
-        ResultSet resultSet = preparedStatement.executeQuery();
-
-        Fine fine = getFromResultSet(resultSet);
-
-        if (fine != null) {
-            fine.setConnection(connection);
-        }
-
-        return fine;
+        return getFromPreparedStatement(preparedStatement);
     }
 
     public static List<Fine> getByUser(Connection connection, int user_id) throws SQLException {
@@ -65,17 +101,16 @@ public class Fine {
 
         preparedStatement.setInt(1,user_id);
 
-        List<Fine> fines = new ArrayList<>();
+        return getListFromPreparedStatement(preparedStatement);
+    }
 
-        ResultSet resultSet = preparedStatement.executeQuery();
+    public static List<Fine> getNonPaidByUser(Connection connection, int user_id) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT id, user_id, loan_id, value, paid FROM fines WHERE user_id = ? AND paid = FALSE");
 
-        Fine fine;
+        preparedStatement.setInt(1,user_id);
 
-        while ((fine = getFromResultSet(resultSet)) != null) {
-            fines.add(fine);
-        }
-
-        return fines;
+        return getListFromPreparedStatement(preparedStatement);
     }
 
     public static List<Fine> getByLoan(Connection connection, int loan_id) throws SQLException {
@@ -84,17 +119,7 @@ public class Fine {
 
         preparedStatement.setInt(1,loan_id);
 
-        List<Fine> fines = new ArrayList<>();
-
-        ResultSet resultSet = preparedStatement.executeQuery();
-
-        Fine fine;
-
-        while ((fine = getFromResultSet(resultSet)) != null) {
-            fines.add(fine);
-        }
-
-        return fines;
+        return getListFromPreparedStatement(preparedStatement);
     }
 
     @Nullable

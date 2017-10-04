@@ -37,6 +37,11 @@ public class User {
         this.postalCode = postalCode;
     }
 
+    @Override
+    public String toString() {
+        return getName();
+    }
+
     @Nullable
     protected static User getFromResultSet(ResultSet resultSet) throws SQLException {
         if (resultSet.next()) {
@@ -197,6 +202,10 @@ public class User {
         return Fine.getByUser(getConnection(),getId());
     }
 
+    public List<Fine> getNonPaidFines() throws SQLException {
+        return Fine.getNonPaidByUser(getConnection(),getId());
+    }
+
     public Integer getId() {
         return id;
     }
@@ -265,5 +274,9 @@ public class User {
 
     public void setConnection(Connection connection) {
         this.connection = connection;
+    }
+
+    public int getLoanPeriod() {
+        return (isTeacher)? 15: 7;
     }
 }

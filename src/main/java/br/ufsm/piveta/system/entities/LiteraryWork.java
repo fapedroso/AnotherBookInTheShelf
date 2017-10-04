@@ -34,6 +34,11 @@ public class LiteraryWork {
         this.year = year;
     }
 
+    @Override
+    public String toString() {
+        return getTitle();
+    }
+
     @Nullable
     protected static LiteraryWork getFromResultSet(ResultSet resultSet) throws SQLException {
         if(resultSet.next()){
@@ -105,6 +110,15 @@ public class LiteraryWork {
 
         return getListFromPreparedStatement(preparedStatement);
     }
+    public static List<LiteraryWork> getByAuthor(Connection connection,Integer author_id) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT id, author_id, publisher_id, title, isbn, edition, year FROM literary_works "+
+                        "WHERE author_id = ?");
+
+        preparedStatement.setInt(1, author_id);
+
+        return getListFromPreparedStatement(preparedStatement);
+    }
     public static LiteraryWork getByISBN(Connection connection,String isbn) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, author_id, publisher_id, title, isbn, edition, year FROM literary_works "+
@@ -157,6 +171,10 @@ public class LiteraryWork {
 
     public Integer getId() {
         return id;
+    }
+
+    public List<Book> getBooks() throws SQLException {
+        return Book.getByLiteraryWork(getConnection(),this);
     }
 
     public Integer getAuthorId() {

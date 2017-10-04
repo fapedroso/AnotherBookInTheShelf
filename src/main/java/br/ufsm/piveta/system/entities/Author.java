@@ -21,6 +21,11 @@ public class Author {
         this.name = name;
     }
 
+    @Override
+    public String toString() {
+        return getName();
+    }
+
     @Nullable
     protected static Author getFromResultSet(ResultSet resultSet) throws SQLException {
         if(resultSet.next()){
@@ -59,7 +64,7 @@ public class Author {
         return author;
     }
 
-    protected static Author get(Connection connection,int id) throws SQLException {
+    public static Author get(Connection connection,int id) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, name FROM authors WHERE id = ?");
 
@@ -68,16 +73,16 @@ public class Author {
         return getFromPreparedStatement(preparedStatement);
     }
 
-    protected static Author get(Connection connection,String name) throws SQLException {
+    public static List<Author> getByName(Connection connection, String name) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
-                "SELECT id, name FROM authors WHERE name = ?");
+                "SELECT id, name FROM authors WHERE name ILIKE concat('%',?,'%')");
 
         preparedStatement.setString(1, name);
 
-        return getFromPreparedStatement(preparedStatement);
+        return getListFromPreparedStatement(preparedStatement);
     }
 
-    protected static List<Author> getAll(Connection connection,String name) throws SQLException {
+    public static List<Author> getAll(Connection connection,String name) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, name FROM authors");
 

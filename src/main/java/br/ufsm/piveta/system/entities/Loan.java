@@ -13,7 +13,9 @@ import java.util.List;
 public class Loan {
     private Connection connection;
     private Integer id;
+    private Book book;
     private Integer book_id;
+    private User user;
     private Integer user_id;
     private LocalDateTime withdrawn_in;
     private LocalDateTime returned_at;
@@ -28,6 +30,24 @@ public class Loan {
         this.returned_at = returned_at;
         this.due_to = due_to;
 
+    }
+
+    @Override
+    public String toString() {
+        String book;
+        String user;
+        String due_to = getDueTo().toString();
+        String returned_at = (this.returned_at != null)? " returned at "+getReturnedAt().toString():"";
+
+        try {
+            user = getUser().toString();
+            book = getBook().getLiteraryWork().toString() + " - (" + getBook().toString()+ ")";
+        } catch (SQLException e) {
+            user = "some user";
+            book = "some book";
+            e.printStackTrace();
+        }
+        return "Loan from "+user+": "+book+" at "+withdrawn_in.toString()+" due to "+due_to+returned_at;
     }
 
     protected static Loan getFromResultSet(ResultSet resultSet) throws SQLException {
@@ -70,7 +90,7 @@ public class Loan {
         return loans;
     }
 
-    protected static Loan get(Connection connection, Integer id) throws SQLException {
+    public static Loan get(Connection connection, Integer id) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, book_id, user_id, withdrawn_in, returned_at, due_to FROM loans WHERE id = ?");
 
@@ -79,14 +99,14 @@ public class Loan {
         return getFromPreparedStatement(preparedStatement);
     }
 
-    protected static List<Loan> getAll(Connection connection) throws SQLException {
+    public static List<Loan> getAll(Connection connection) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, book_id, user_id, withdrawn_in, returned_at, due_to FROM loans");
 
         return getListFromPreparedStatement(preparedStatement);
     }
 
-    protected static List<Loan> getByBook(Connection connection, int book_id) throws SQLException {
+    public static List<Loan> getByBook(Connection connection, int book_id) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, book_id, user_id, withdrawn_in, returned_at, due_to FROM loans WHERE book_id = ?");
 
@@ -95,7 +115,7 @@ public class Loan {
         return getListFromPreparedStatement(preparedStatement);
     }
 
-    protected static List<Loan> getByUser(Connection connection, int user_id) throws SQLException {
+    public static List<Loan> getByUser(Connection connection, int user_id) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, book_id, user_id, withdrawn_in, returned_at, due_to FROM loans WHERE user_id = ?");
 
@@ -104,7 +124,21 @@ public class Loan {
         return getListFromPreparedStatement(preparedStatement);
     }
 
-    protected static List<Loan> getLate(Connection connection, LocalDate returned_at, LocalDate due_to) throws SQLException {
+    public static List<Loan> getRenewableByUser(Connection connection, User user) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT loans.id, loans.book_id, loans.user_id, withdrawn_in, returned_at, due_to FROM loans "+
+                        "LEFT JOIN reservations ON reservations.book_id = loans.book_id "+
+                        "WHERE loans.user_id = ? "+
+                        "AND due_to BETWEEN current_date+1 AND current_date+5"+
+                        "GROUP BY loans.id "+
+                        "HAVING (max(reservations.reserved_for) < current_date OR count(reservations) = 0)");
+
+        preparedStatement.setInt(1, user.getId());
+
+        return getListFromPreparedStatement(preparedStatement);
+    }
+
+    public static List<Loan> getLate(Connection connection, LocalDate returned_at, LocalDate due_to) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, book_id, user_id, withdrawn_in, returned_at, due_to FROM loans " +
                         "WHERE returned_at ISNULL AND due_to < current_date");
@@ -112,8 +146,8 @@ public class Loan {
         return getListFromPreparedStatement(preparedStatement);
     }
 
-    public boolean save(Connection connection) throws SQLException {
-        PreparedStatement preparedStatement = connection.prepareStatement(
+    public boolean save() throws SQLException {
+        PreparedStatement preparedStatement = getConnection().prepareStatement(
                 "UPDATE loans SET returned_at = ?, due_to = ? WHERE id = ?");
 
         preparedStatement.setTimestamp(1,java.sql.Timestamp.valueOf(getReturnedAt()));
@@ -151,8 +185,22 @@ public class Loan {
         return book_id;
     }
 
+    public Book getBook() throws SQLException {
+        if (book == null) {
+            book = Book.get(getConnection(),getBookId());
+        }
+        return book;
+    }
+
     public Integer getUserId() {
         return user_id;
+    }
+
+    public User getUser() throws SQLException {
+        if (user == null) {
+            user = User.get(getConnection(),getUserId());
+        }
+        return user;
     }
 
     public LocalDateTime getWithdrawnIn() {

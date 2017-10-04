@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +25,11 @@ public class Book {
         this.code = code;
         this.condition = condition;
 
+    }
+
+    @Override
+    public String toString() {
+        return getCode();
     }
 
     @Nullable
@@ -82,6 +88,76 @@ public class Book {
                         "WHERE title ILIKE CONCAT('%',?,'%')");
 
         preparedStatement.setString(1, title);
+
+        return getListFromPreparedStatement(preparedStatement);
+    }
+
+    public static List<Book> getByISBN(Connection connection, String isbn) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT books.id, books.literary_work_id, books.cod, books.condition FROM books "+
+                        "JOIN literary_works ON books.literary_work_id = literary_works.id " +
+                        "WHERE isbn = ?");
+
+        preparedStatement.setString(1, isbn);
+
+        return getListFromPreparedStatement(preparedStatement);
+    }
+
+    public static List<Book> getByLiteraryWork(Connection connection, LiteraryWork literaryWork) throws SQLException {
+        return getByLiteraryWork(connection, literaryWork.getId());
+    }
+    public static List<Book> getByLiteraryWork(Connection connection, int literaryWorkId) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT books.id, books.literary_work_id, books.cod, books.condition FROM books "+
+                        "WHERE literary_work_id = ?");
+
+        preparedStatement.setInt(1, literaryWorkId);
+
+        return getListFromPreparedStatement(preparedStatement);
+    }
+
+    public static List<Book> getAvailableBooksByLiteraryWork(Connection connection, LiteraryWork literaryWork)
+            throws SQLException {
+        return getAvailableBooksForDateByLiteraryWork(connection,literaryWork,LocalDate.now());
+    }
+
+    public static List<Book> getAvailableBooksForDateByLiteraryWork(Connection connection, LiteraryWork literaryWork,
+                                                                    LocalDate date) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT books.id, books.literary_work_id, books.cod, books.condition FROM books " +
+                        "LEFT JOIN reservations ON books.id = reservations.book_id " +
+                        "LEFT JOIN loans ON books.id = loans.book_id " +
+                        "WHERE books.literary_work_id = ? " +
+                        "GROUP BY books.id " +
+                        "HAVING (max(loans.due_to) < ? OR count(loans) = 0) " +
+                        "AND (max(reservations.reserved_for) < current_date OR count(reservations) = 0)");
+
+        preparedStatement.setInt(1, literaryWork.getId());
+        preparedStatement.setDate(2, java.sql.Date.valueOf(date));
+
+        return getListFromPreparedStatement(preparedStatement);
+    }
+
+    public static List<Book> getByAuthor(Connection connection, Author author) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT books.id, books.literary_work_id, books.cod, books.condition FROM books "+
+                        "JOIN literary_works ON books.literary_work_id = literary_works.id " +
+                        "JOIN authors ON literary_works.author_id = authors.id " +
+                        "WHERE authors.id = ?");
+
+        preparedStatement.setInt(1, author.getId());
+
+        return getListFromPreparedStatement(preparedStatement);
+    }
+
+    public static List<Book> getByPublisher(Connection connection, Publisher publisher) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT books.id, books.literary_work_id, books.cod, books.condition FROM books "+
+                        "JOIN literary_works ON books.literary_work_id = literary_works.id " +
+                        "JOIN publishers ON literary_works.publisher_id = publishers.id " +
+                        "WHERE publishers.id = ?");
+
+        preparedStatement.setInt(1, publisher.getId());
 
         return getListFromPreparedStatement(preparedStatement);
     }

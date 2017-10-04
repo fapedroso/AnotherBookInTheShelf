@@ -29,6 +29,24 @@ public class Reservation {
         this.reserved_for = reserved_for;
     }
 
+    @Override
+    public String toString() {
+        String user;
+        String book;
+        String date = getReservedFor().toString();
+
+        try {
+            user = getUser().toString();
+            book = getBook().toString();
+        } catch (SQLException e) {
+            user = "some user";
+            book = "some book";
+            e.printStackTrace();
+        }
+
+        return "Reservation of book "+book+" for user "+user+" to day "+date;
+    }
+
     @Nullable
     public static Reservation getFromResultSet(ResultSet resultSet) throws SQLException {
         if (resultSet.next()) {
@@ -110,6 +128,17 @@ public class Reservation {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, user_id, book_id, reserved_for FROM reservations WHERE reserved_for > ?");
         preparedStatement.setDate(1,java.sql.Date.valueOf(date));
+
+        return getListFromPreparedStatement(preparedStatement);
+    }
+
+    public static List<Reservation> getByAfterDateByUser(Connection connection, LocalDate date, User user) throws SQLException {
+
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT id, user_id, book_id, reserved_for FROM reservations WHERE reserved_for > ? AND user_id = ?");
+
+        preparedStatement.setDate(1,java.sql.Date.valueOf(date));
+        preparedStatement.setInt(2,user.getId());
 
         return getListFromPreparedStatement(preparedStatement);
     }
