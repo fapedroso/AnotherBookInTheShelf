@@ -509,7 +509,7 @@ public class Main {
         if (user == null) return;
         System.out.printf("What would you like to do with user %s:\n\n",user.getUsername());
         System.out.println("[1] Delete");
-        System.out.println("[2] Pay debts");
+        System.out.println("[2] Pay fines");
         System.out.println("[0] Cancel");
 
 
@@ -524,7 +524,7 @@ public class Main {
                 break;
             case 2:
                 System.out.printf("Not implemented yet.");
-                // TODO: implements showUserDebts()
+                // TODO: implements showUserFines()
                 break;
             case 0:
             default:
