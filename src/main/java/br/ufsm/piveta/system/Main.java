@@ -149,13 +149,24 @@ public class Main {
     protected void showLibrarianMainOptions(){
         System.out.println("Choose an action:\n");
         System.out.println("[1] Manage Books");
+        System.out.println("[2] Manage Users");
+        System.out.println("[2] Manage Loans");
         System.out.println("[0] Exit");
 
-        switch (getValidOption(1)){
+        switch (getValidOption(2)){
             case 0:
                 userExiting = true;
                 return;
             case 1:
+                System.out.printf("Not implemented yet.");
+                // TODO: implements manageBooks
+                break;
+            case 2:
+                manageUsers();
+                break;
+            case 3:
+                System.out.printf("Not implemented yet.");
+                // TODO: implements manageLoans
                 break;
         }
     }
@@ -216,6 +227,14 @@ public class Main {
         boolean negative = (c == 'n' || c == 'N');
 
         return positive || !negative && defaultChoice;
+    }
+
+    protected String getValidLine(){
+        String line;
+        do {
+            line = scanner.nextLine();
+        } while (line.isEmpty());
+        return line;
     }
 
     public static void clearConsole(){
@@ -401,8 +420,6 @@ public class Main {
         System.out.println("[0] Cancel");
 
         switch (getValidOption(4)){
-            case 0:
-                return null;
             case 1:
                 return searchForLiteraryWorkByISBN();
             case 2:
@@ -411,8 +428,152 @@ public class Main {
                 return searchForLiteraryWorkByPublisher();
             case 4:
                 return searchForLiteraryWorkByAuthor();
+            case 0:
             default:
                 return null;
+        }
+    }
+
+    protected User searchForUserByNameOrUsername(){
+        LocatorAndSelector<User,String> locator = new LocatorAndSelector<User, String>(scanner) {
+            @Override
+            protected List<User> searchSeveral(String searchable) throws SQLException {
+                return User.getByPartOfNameOrUsername(connection,searchable);
+            }
+
+            @Override
+            protected String getEntities() {
+                return "users";
+            }
+
+            @Override
+            protected String getEntity() {
+                return "user";
+            }
+
+            @Override
+            protected String getParameterName() {
+                return "name or username";
+            }
+
+            @Override
+            protected String getSearchablePart(String userEntry) {
+                return userEntry;
+            }
+
+            @Override
+            protected String getPrompt() {
+                return "Enter a Name or Username: ";
+            }
+        };
+        return locator.consoleSearch();
+    }
+
+    private void includeUser() {
+
+        try {
+            System.out.println("Enter username: ");
+            String username = getValidLine();
+            while (User.getByUsername(connection,username) != null){
+                System.out.println("Username already taken, please try a different one: ");
+                username = getValidLine();
+            }
+            System.out.println("Enter complete name: ");
+            String name = getValidLine();
+            System.out.println("User is a Teacher [yN]? ");
+            boolean isTeacher = getYesOfNoOption(false);
+            System.out.println("User is a Librarian [yN]? ");
+            boolean isLibrarian = getYesOfNoOption(false);
+            System.out.println("Enter user address: ");
+            String address = getValidLine();
+            System.out.println("Enter user phone: ");
+            String phone = getValidLine();
+            System.out.println("Enter user postal code: ");
+            String postalCode = getValidLine();
+            String password;
+            if (console != null) {
+                password = new String(console.readPassword("Enter user password: "));
+            }else{
+                System.out.print("Enter user password: ");
+                password = scanner.nextLine();
+            }
+
+            User.create(connection,name,username,isTeacher,isLibrarian,address,phone,postalCode,password);
+            System.out.println("User registered with success.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void manageUser(User user){
+        if (user == null) return;
+        System.out.printf("What would you like to do with user %s:\n\n",user.getUsername());
+        System.out.println("[1] Delete");
+        System.out.println("[2] Pay debts");
+        System.out.println("[0] Cancel");
+
+
+        switch (getValidOption(2)){
+            case 1:
+                try {
+                    user.remove();
+                    System.out.printf("User deleted.\n");
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case 2:
+                System.out.printf("Not implemented yet.");
+                // TODO: implements showUserDebts()
+                break;
+            case 0:
+            default:
+                break;
+        }
+
+    }
+
+    private void listUsers() {
+        try {
+            int i = 0;
+            List<User> users = User.getAll(connection);
+            System.out.println("Select a user to manage or delete:\n");
+            for (User user : users){
+                System.out.printf("[%d] %s\n",++i,user.toString());
+            }
+            System.out.println("[0] Cancel");
+
+            int index = getValidOption(i);
+
+            if (index > 0) {
+                manageUser(users.get(index-1));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void manageUsers() {
+        clearConsole();
+        System.out.println("What would you like to do:\n");
+        System.out.println("[1] Include User");
+        System.out.println("[2] List User");
+        System.out.println("[3] Search User");
+        System.out.println("[0] Cancel");
+
+        switch (getValidOption(3)){
+            case 1:
+                includeUser();
+                break;
+            case 2:
+                listUsers();
+                break;
+            case 3:
+                manageUser(searchForUserByNameOrUsername());
+                break;
+            case 0:
+            default:
+                break;
         }
     }
 
@@ -507,9 +668,6 @@ public class Main {
                     Reservation.create(connection,loggedUser.getId(),reservedBook.getId(),dateToReserve);
                     System.out.println("Your reservation has been registered with success.");
                 }
-                while (scanner.hasNext()) {scanner.next();}
-                System.out.println("Press [Enter] to continue.");
-                scanner.nextLine();
             } else {
                 System.out.print("You cannot reserve a book while having an unpaid fine.");
             }

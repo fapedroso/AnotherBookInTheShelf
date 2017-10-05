@@ -39,7 +39,7 @@ public class User {
 
     @Override
     public String toString() {
-        return getName();
+        return getName() + " ("+getUsername()+")";
     }
 
     @Nullable
@@ -96,7 +96,7 @@ public class User {
         return getFromPreparedStatement(preparedStatement);
     }
 
-    public static User get(Connection connection, String username) throws SQLException {
+    public static User getByUsername(Connection connection, String username) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
                 "SELECT id, name, username, is_teacher, is_librarian, address, phone, postal_code " +
                         "FROM users WHERE username = ?");
@@ -104,6 +104,17 @@ public class User {
         preparedStatement.setString(1,username);
 
         return getFromPreparedStatement(preparedStatement);
+    }
+
+    public static List<User> getByPartOfNameOrUsername(Connection connection, String name) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "SELECT id, name, username, is_teacher, is_librarian, address, phone, postal_code " +
+                        "FROM users WHERE username ILIKE concat('%',?,'%') OR name ILIKE concat('%',?,'%')");
+
+        preparedStatement.setString(1,name);
+        preparedStatement.setString(2,name);
+
+        return getListFromPreparedStatement(preparedStatement);
     }
 
     public static List<User> getAll(Connection connection) throws SQLException {
